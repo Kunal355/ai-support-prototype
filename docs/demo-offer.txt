@@ -1,0 +1,8 @@
+Demo Shop - Weekend Offer
+(Dummy data for the live demo. Not a real offer.)
+
+Sunday Sale
+Every Sunday, Demo Shop gives a flat 20% discount on all shoes. Use the code SUNDAY20 at checkout. The offer is not valid on items marked "Final Sale".
+
+Gift wrapping
+Gift wrapping is available on any order for Rs 25 per item. Choose "Gift wrap" on the checkout page.

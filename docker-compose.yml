@@ -1,0 +1,75 @@
+# AI customer support prototype: Chatwoot + n8n + Qdrant
+# All data lives in named volumes, which sit inside D:\Docker\wsl (Docker data root).
+name: ai-support
+
+x-chatwoot: &chatwoot
+  image: chatwoot/chatwoot:v4.19.1-ce
+  env_file: .env
+  volumes:
+    - chatwoot_storage:/app/storage
+  depends_on:
+    - postgres
+    - redis
+  restart: unless-stopped
+
+services:
+  rails:
+    <<: *chatwoot
+    entrypoint: docker/entrypoints/rails.sh
+    command: ['bundle', 'exec', 'rails', 's', '-p', '3000', '-b', '0.0.0.0']
+    ports:
+      - '127.0.0.1:3000:3000'
+
+  sidekiq:
+    <<: *chatwoot
+    command: ['bundle', 'exec', 'sidekiq', '-C', 'config/sidekiq.yml']
+
+  postgres:
+    image: pgvector/pgvector:pg16
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: chatwoot_production
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    restart: unless-stopped
+
+  redis:
+    image: redis:7-alpine
+    command: ['sh', '-c', 'redis-server --requirepass "$$REDIS_PASSWORD"']
+    environment:
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
+    volumes:
+      - redis_data:/data
+    restart: unless-stopped
+
+  n8n:
+    image: n8nio/n8n:stable
+    environment:
+      GENERIC_TIMEZONE: Asia/Kolkata
+      TZ: Asia/Kolkata
+      N8N_HOST: localhost
+      N8N_PORT: 5678
+      N8N_PROTOCOL: http
+      WEBHOOK_URL: http://localhost:5678/
+    ports:
+      - '127.0.0.1:5678:5678'
+    volumes:
+      - n8n_data:/home/node/.n8n
+    restart: unless-stopped
+
+  qdrant:
+    # Pinned: qdrant/qdrant:latest (v1.20.0) unpacked with empty files on this machine ("exec format error")
+    image: qdrant/qdrant:v1.19.0
+    ports:
+      - '127.0.0.1:6333:6333'
+    volumes:
+      - qdrant_data:/qdrant/storage
+    restart: unless-stopped
+
+volumes:
+  chatwoot_storage:
+  postgres_data:
+  redis_data:
+  n8n_data:
+  qdrant_data:

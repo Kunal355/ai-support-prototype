@@ -1,0 +1,495 @@
+{
+  "id": "answerWorkflow02",
+  "name": "02 Jawab + Handoff",
+  "nodes": [
+    {
+      "id": "c2000000-0000-4000-8000-000000000001",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        0,
+        0
+      ],
+      "webhookId": "d2000000-0000-4000-8000-000000000001",
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "chatwoot-bot",
+        "responseMode": "onReceived",
+        "options": {}
+      }
+    },
+    {
+      "id": "c2000000-0000-4000-8000-000000000002",
+      "name": "Customer msg + Pending?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        220,
+        0
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "e1",
+              "leftValue": "={{ $json.body.event }}",
+              "rightValue": "message_created",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            },
+            {
+              "id": "e2",
+              "leftValue": "={{ $json.body.message_type }}",
+              "rightValue": "incoming",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            },
+            {
+              "id": "e3",
+              "leftValue": "={{ $json.body.conversation.status }}",
+              "rightValue": "pending",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "c2000000-0000-4000-8000-000000000003",
+      "name": "AI Agent",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        460,
+        0
+      ],
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.body.content }}",
+        "options": {
+          "systemMessage": "Tum \"Demo Shop\" ke customer support assistant ho.\n\nRules:\n1. Har sawaal par PEHLE knowledge_base tool se search karo.\n2. Sirf wahi jawab do jo tool ke result mein likha hai. Apni taraf se kuch mat banao.\n3. Jawab chhota (1-3 lines), polite, aur customer ki hi language mein do (Hindi, Hinglish ya English).\n4. In haalat mein sirf ek shabd likho: HANDOFF\n   - tool mein jawab nahi mila,\n   - customer insaan/agent se baat karna chahta hai,\n   - customer gussa ya pareshaan hai.\n   HANDOFF ke saath aur kuch mat likho.",
+          "maxIterations": 5
+        }
+      }
+    },
+    {
+      "id": "c2000000-0000-4000-8000-000000000004",
+      "name": "Gemini Chat Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1.2,
+      "position": [
+        380,
+        220
+      ],
+      "parameters": {
+        "modelName": "models/gemini-3.5-flash-lite",
+        "options": {
+          "temperature": 0.2
+        }
+      },
+      "credentials": {
+        "googlePalmApi": {
+          "id": "TVLoFE2T2FDezT6s",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "id": "c2000000-0000-4000-8000-000000000005",
+      "name": "knowledge_base",
+      "type": "@n8n/n8n-nodes-langchain.vectorStoreQdrant",
+      "typeVersion": 1.3,
+      "position": [
+        560,
+        220
+      ],
+      "parameters": {
+        "mode": "retrieve-as-tool",
+        "toolDescription": "Demo Shop ke FAQ aur policies (refund, return, delivery, COD, payment, support hours) mein search karta hai. Customer ke har sawaal ke liye isse use karo.",
+        "qdrantCollection": {
+          "__rl": true,
+          "mode": "id",
+          "value": "knowledge_base"
+        },
+        "topK": 4,
+        "options": {}
+      },
+      "credentials": {
+        "qdrantApi": {
+          "id": "qdrantLocal00001",
+          "name": "Qdrant Local"
+        }
+      }
+    },
+    {
+      "id": "c2000000-0000-4000-8000-000000000006",
+      "name": "Embeddings Gemini",
+      "type": "@n8n/n8n-nodes-langchain.embeddingsGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        640,
+        420
+      ],
+      "parameters": {
+        "modelName": "models/gemini-embedding-001"
+      },
+      "credentials": {
+        "googlePalmApi": {
+          "id": "TVLoFE2T2FDezT6s",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "id": "c2000000-0000-4000-8000-000000000007",
+      "name": "HANDOFF?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        820,
+        0
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "h1",
+              "leftValue": "={{ $json.output }}",
+              "rightValue": "HANDOFF",
+              "operator": {
+                "type": "string",
+                "operation": "contains"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "c2000000-0000-4000-8000-000000000008",
+      "name": "Reply to customer",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1060,
+        100
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "=http://rails:3000/api/v1/accounts/{{ $('Webhook').item.json.body.account.id }}/conversations/{{ $('Webhook').item.json.body.conversation.id }}/messages",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "keypair",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "content",
+              "value": "={{ $json.output }}"
+            },
+            {
+              "name": "message_type",
+              "value": "outgoing"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "2FFHJgFhzZ2i3oBp",
+          "name": "Chatwoot Bot"
+        }
+      }
+    },
+    {
+      "id": "c2000000-0000-4000-8000-000000000009",
+      "name": "Handoff message",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1060,
+        -120
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "=http://rails:3000/api/v1/accounts/{{ $('Webhook').item.json.body.account.id }}/conversations/{{ $('Webhook').item.json.body.conversation.id }}/messages",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "keypair",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "content",
+              "value": "Main aapko hamari team se jod raha hoon 🙏"
+            },
+            {
+              "name": "message_type",
+              "value": "outgoing"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "2FFHJgFhzZ2i3oBp",
+          "name": "Chatwoot Bot"
+        }
+      }
+    },
+    {
+      "id": "c2000000-0000-4000-8000-00000000000a",
+      "name": "Open for human",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1300,
+        -120
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "=http://rails:3000/api/v1/accounts/{{ $('Webhook').item.json.body.account.id }}/conversations/{{ $('Webhook').item.json.body.conversation.id }}/toggle_status",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "keypair",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "status",
+              "value": "open"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "2FFHJgFhzZ2i3oBp",
+          "name": "Chatwoot Bot"
+        }
+      }
+    },
+    {
+      "id": "c2000000-0000-4000-8000-00000000000b",
+      "name": "Private note for agent",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1540,
+        -120
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "2FFHJgFhzZ2i3oBp",
+          "name": "Chatwoot Bot"
+        }
+      },
+      "parameters": {
+        "method": "POST",
+        "url": "=http://rails:3000/api/v1/accounts/{{ $('Webhook').item.json.body.account.id }}/conversations/{{ $('Webhook').item.json.body.conversation.id }}/messages",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "keypair",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "content",
+              "value": "=🤖 AI Helper ne yeh chat aapko di hai. Customer ka last message: \"{{ $('Webhook').item.json.body.content }}\". FAQ mein jawab nahi mila, ya customer insaan se baat karna chahta hai."
+            },
+            {
+              "name": "message_type",
+              "value": "outgoing"
+            },
+            {
+              "name": "private",
+              "value": "true"
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "c2000000-0000-4000-8000-00000000000c",
+      "name": "Add ai-handoff label",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1780,
+        -120
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "2FFHJgFhzZ2i3oBp",
+          "name": "Chatwoot Bot"
+        }
+      },
+      "parameters": {
+        "method": "POST",
+        "url": "=http://rails:3000/api/v1/accounts/{{ $('Webhook').item.json.body.account.id }}/conversations/{{ $('Webhook').item.json.body.conversation.id }}/labels",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "json",
+        "options": {},
+        "jsonBody": "{\"labels\": [\"ai-handoff\"]}"
+      }
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Customer msg + Pending?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Customer msg + Pending?": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "HANDOFF?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HANDOFF?": {
+      "main": [
+        [
+          {
+            "node": "Handoff message",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Reply to customer",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Handoff message": {
+      "main": [
+        [
+          {
+            "node": "Open for human",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "knowledge_base": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Embeddings Gemini": {
+      "ai_embedding": [
+        [
+          {
+            "node": "knowledge_base",
+            "type": "ai_embedding",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Open for human": {
+      "main": [
+        [
+          {
+            "node": "Private note for agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Private note for agent": {
+      "main": [
+        [
+          {
+            "node": "Add ai-handoff label",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "active": false
+}

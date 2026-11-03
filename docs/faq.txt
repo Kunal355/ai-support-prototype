@@ -1,0 +1,29 @@
+Demo Shop - Customer Support FAQ
+(Dummy data for the prototype. Not a real business.)
+
+About Demo Shop
+Demo Shop is an online store that sells clothes, shoes and home accessories across India.
+
+Refund policy
+Refunds are processed within 7 days after we receive the returned product. The money goes back to the original payment method. For Cash on Delivery orders, the refund is sent to your bank account or UPI ID.
+
+Return policy
+You can return any unused product within 10 days of delivery. The product must have its original tags and packaging. Innerwear, socks and sale items marked "Final Sale" cannot be returned. To start a return, go to My Orders and click "Return".
+
+Delivery time
+Orders are delivered in 3 to 5 working days in metro cities and 5 to 7 working days in other areas. Delivery is free on orders above Rs 499. Below Rs 499, the delivery charge is Rs 49.
+
+Cash on Delivery (COD)
+Cash on Delivery is available on orders up to Rs 5000. A COD fee of Rs 30 is added to the order.
+
+Order tracking
+After your order is shipped, you get an SMS and email with a tracking link. You can also track it in My Orders.
+
+Cancelling an order
+You can cancel an order for free before it is shipped. After shipping, you cannot cancel; you can return it after delivery instead.
+
+Payment methods
+We accept UPI, debit cards, credit cards, net banking and Cash on Delivery.
+
+Support hours
+Our support team is available Monday to Saturday, 10 AM to 7 PM IST. Messages sent outside these hours are answered the next working day.

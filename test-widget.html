@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Demo Shop</title>
+  <style>
+    body { font-family: system-ui, sans-serif; max-width: 640px; margin: 48px auto; padding: 0 16px; background: #fafafa; color: #222; }
+    .note { background: #fff; border: 1px solid #ddd; border-radius: 8px; padding: 16px; }
+  </style>
+</head>
+<body>
+  <h1>🛍️ Demo Shop</h1>
+  <div class="note">
+    <p>Fake website for testing the Chatwoot widget (inbox "Demo Website").</p>
+    <p>Neeche right corner mein chat bubble dabao aur message bhejo.</p>
+  </div>
+
+  <!-- Chatwoot widget: copied from Settings → Inboxes → Demo Website → Configuration -->
+  <script>
+    (function(d,t) {
+      var BASE_URL="http://localhost:3000";
+      var g=d.createElement(t),s=d.getElementsByTagName(t)[0];
+      g.src=BASE_URL+"/packs/js/sdk.js";
+      g.async = true;
+      s.parentNode.insertBefore(g,s);
+      g.onload=function(){
+        window.chatwootSDK.run({
+          websiteToken: 'cH6gEM5w7DFJxscoMFZWaLhh',
+          baseUrl: BASE_URL
+        })
+      }
+    })(document,"script");
+  </script>
+</body>
+</html>
