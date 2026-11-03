@@ -103,3 +103,7 @@ The build agent updates this file after every step. Each entry gets: the date, w
 - Source check: the bot token may call `conversations/labels` index/create and `messages` create (`chatwoot/app/controllers/concerns/access_token_auth_helper.rb:2-7`). `private` is a message param (`app/builders/messages/message_builder.rb:10`). Labels `create` **replaces** the conversation's labels (`labelable.rb:9-11`); fine because bot chats have no labels at handoff.
 - Did: backup `workflows/02-answer.backup-2026-11-03-before-phase7.json`. Added 2 HTTP nodes after "Open for human": "Private note for agent" (POST /messages, private=true, includes the customer's last message) → "Add ai-handoff label" (POST /labels `{"labels":["ai-handoff"]}`). validate_workflow → 0 errors. Created Chatwoot label `ai-handoff` (red, sidebar) with rails runner. Re-imported, published, restarted n8n.
 - Verified (conv 7, "Kya aap laptop repair karte ho?"): the customer saw only the handoff message. DB: private note private=true, status open, labels ["ai-handoff"], activity "AI Helper added ai-handoff".
+
+### 2026-11-03: Published to GitHub
+- The user asked to upload, and chose a **public** repo named `ai-support-prototype`. Added `README.md` (English, for GitHub visitors). `git init` + commit `4d8ed9c` + `gh repo create --public --push`.
+- Verified: https://github.com/Kunal355/ai-support-prototype is public, and `.env` is not in the repo. `test-widget.html` contains the website-inbox token; it is public by design (any site embedding the widget shows it).
